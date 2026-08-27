@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conjugation Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6F1;
+    --paper-line: rgba(30,37,48,0.07);
+    --ink:#1E2530;
+    --ink-soft:#5B6472;
+    --card:#FFFFFF;
+    --margin-red:#C00000;
+    --ring: rgba(30,37,48,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    background-image:
+      repeating-linear-gradient(to bottom, transparent 0 38px, var(--paper-line) 38px 39px);
+    background-position: 0 84px;
+    position:relative;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    top:0; bottom:0; left:52px;
+    width:1px;
+    background:rgba(192,0,0,0.28);
+    pointer-events:none;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:28px 24px 48px 64px;
+  }
+  header{
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(26px,6vw,34px);
+    margin:2px 0 4px;
+    letter-spacing:-0.01em;
+    text-wrap:balance;
+  }
+  .sub{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+
+  .addbtn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1.5px dashed var(--ring);
+    border-radius:999px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .addbtn:hover{ border-color:var(--ink); color:var(--ink); }
+  .addbtn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+  /* pronoun tabs */
+  .pronouns{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:20px 0 6px;
+  }
+  .pchip{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:7px 13px;
+    border-radius:8px;
+    border:1.5px solid var(--chip-color, #ccc);
+    background:#fff;
+    color:var(--chip-color, var(--ink));
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease, color .15s ease;
+    line-height:1.1;
+  }
+  .pchip:hover{ transform:translateY(-1px); }
+  .pchip.active{
+    background:var(--chip-color, var(--ink));
+    color:#fff;
+  }
+  .pchip:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
+  /* time track */
+  .track{
+    margin:26px 0 8px;
+    position:relative;
+  }
+  .track-line{
+    position:relative;
+    height:2px;
+    background:var(--ring);
+    border-radius:2px;
+    margin:0 6px;
+  }
+  .track-nodes{
+    display:flex;
+    justify-content:space-between;
+    position:relative;
+    top:-6px;
+    padding:0 0px;
+  }
+  .tnode{
+    width:14px;height:14px;border-radius:50%;
+    background:var(--card);
+    border:2px solid var(--ring);
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .tnode.active{
+    background:var(--accent, var(--ink));
+    border-color:var(--accent, var(--ink));
+    transform:scale(1.35);
+    box-shadow:0 0 0 5px color-mix(in srgb, var(--accent, var(--ink)) 18%, transparent);
+  }
+  .tlabels{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+  }
+  .tlabels span{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    text-align:center;
+    width:20%;
+  }
+  .tlabels span.active{ color:var(--accent, var(--ink)); font-weight:700; }
+
+  /* verb chips */
+  .verbs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    justify-content:center;
+    margin:22px 0 18px;
+  }
+  .vchip{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:14.5px;
+    padding:6px 14px;
+    border-radius:999px;
+    border:1px solid var(--ring);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .vchip.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+
+  /* card */
+  .stage{
+    perspective:1400px;
+    margin:6px 0 22px;
+  }
+  .card{
+    position:relative;
+    height:230px;
+    transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1);
+    cursor:pointer;
+  }
+  .card.flipped{ transform:rotateY(180deg); }
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:16px;
+    background:var(--card);
+    border:1.5px solid var(--ring);
+    box-shadow:0 1px 2px rgba(30,37,48,0.04), 0 10px 24px -12px rgba(30,37,48,0.18);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+  }
+  .face.back{ transform:rotateY(180deg); }
+  .face::after{
+    content:"";
+    position:absolute;
+    top:14px; left:14px; right:14px; bottom:14px;
+    border:1px dashed var(--ring);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent, var(--ink-soft));
+    margin-bottom:10px;
+  }
+  .front .pronoun-word{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:38px;
+    color:var(--accent, var(--ink));
+    line-height:1;
+  }
+  .front .verb-word{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:18px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  .front .hint{
+    margin-top:16px;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:.7;
+  }
+  .back .form{
+    font-family:'JetBrains Mono', monospace;
+    font-size:34px;
+    font-weight:500;
+    letter-spacing:-0.01em;
+  }
+  .back .form .stem{ color:var(--ink); }
+  .back .form .ending{ color:var(--accent, var(--margin-red)); font-weight:700; }
+  .back .gloss{
+    margin-top:10px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .back .example{
+    margin-top:16px;
+    padding-top:12px;
+    border-top:1px dashed var(--ring);
+    width:100%;
+    font-size:12.5px;
+    line-height:1.5;
+  }
+  .back .example .es{ color:var(--ink); font-style:italic; }
+  .back .example .en{ color:var(--ink-soft); }
+
+  /* controls */
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .navbtn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:9px 16px;
+    border-radius:10px;
+    border:1.5px solid var(--ink);
+    background:var(--ink);
+    color:#fff;
+    cursor:pointer;
+  }
+  .navbtn:disabled{ opacity:.3; cursor:default; }
+  .counter{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .kbd-hint{
+    text-align:center;
+    margin-top:16px;
+    font-size:11px;
+    color:var(--ink-soft);
+    opacity:.65;
+  }
+
+  /* modal */
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background:rgba(30,37,48,0.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:100;
+  }
+  .modal-backdrop.hidden{ display:none; }
+  .modal-card{
+    background:var(--card);
+    border:1.5px solid var(--ring);
+    border-radius:16px;
+    box-shadow:0 24px 60px -20px rgba(30,37,48,0.45);
+    max-width:560px; width:100%;
+    max-height:86vh; overflow-y:auto;
+    padding:24px 22px 26px;
+    position:relative;
+  }
+  .modal-close{
+    position:absolute; top:14px; right:14px;
+    width:28px; height:28px;
+    border-radius:50%;
+    border:1.5px solid var(--ring);
+    background:transparent;
+    color:var(--ink-soft);
+    font-size:15px; line-height:1;
+    cursor:pointer;
+  }
+  .modal-close:hover{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .modal-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .modal-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    margin:2px 0 16px;
+  }
+  .word-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px dashed var(--ring);
+  }
+  .word-row:last-child{ border-bottom:none; }
+  .word-main .word-name{ font-family:'Fraunces', serif; font-style:italic; font-size:15.5px; }
+  .word-main .word-meaning{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .word-del{
+    width:26px; height:26px; border-radius:50%;
+    border:1.5px solid var(--ring);
+    background:transparent; color:var(--ink-soft);
+    cursor:pointer; font-size:13px; line-height:1; flex:none;
+  }
+  .word-del:hover{ background:var(--margin-red); color:#fff; border-color:var(--margin-red); }
+  .modal-newbtn{
+    margin-top:16px;
+    width:100%;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    padding:11px 16px; border-radius:10px;
+    border:1.5px solid var(--ink); background:var(--ink); color:#fff;
+    cursor:pointer;
+  }
+  .form-row{ margin-bottom:14px; }
+  .form-row label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:6px;
+  }
+  .form-row input[type=text]{
+    width:100%;
+    font-family:'Inter',sans-serif; font-size:15px;
+    padding:9px 11px;
+    border:1.5px solid var(--ring); border-radius:8px;
+    background:var(--paper); color:var(--ink);
+  }
+  .form-row input[type=text]:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+  .form-note{ font-size:12px; color:var(--ink-soft); font-style:italic; margin:-6px 0 14px; }
+  .conj-table{ width:100%; border-collapse:collapse; margin-bottom:16px; }
+  .conj-table th{
+    font-family:'JetBrains Mono', monospace;
+    font-size:9.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ink-soft); text-align:center; font-weight:600;
+    padding:0 2px 6px;
+  }
+  .conj-table th:first-child{ text-align:left; }
+  .conj-table td{ padding:3px 2px; }
+  .conj-table td:first-child{
+    font-family:'Fraunces', serif; font-size:12.5px; color:var(--ink-soft);
+    white-space:nowrap; padding-right:6px;
+  }
+  .conj-table input{
+    width:100%;
+    font-family:'JetBrains Mono', monospace; font-size:12.5px;
+    text-align:center;
+    border:none; border-bottom:1.5px solid var(--ring);
+    background:transparent; color:var(--ink);
+    padding:4px 2px;
+  }
+  .conj-table input:focus{ outline:none; border-bottom-color:var(--ink); }
+  .form-actions{ display:flex; gap:10px; }
+  .form-actions .navbtn{ flex:1; }
+  .form-actions .ghostbtn{
+    flex:1;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    padding:9px 16px; border-radius:10px;
+    border:1.5px solid var(--ring); background:transparent; color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .form-actions .ghostbtn:hover{ border-color:var(--ink); color:var(--ink); }
+
+  @media (max-width:420px){
+    .wrap{ padding-left:44px; }
+    body::before{ left:32px; }
+    .pronoun-word{ font-size:32px !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">from your tenses notes</div>
+    <h1>One pronoun at a time</h1>
+    <div class="sub">Pick a pronoun below, then flip through every tense for each verb before moving to the next one. Add your own verbs any time — they're saved to this browser.</div>
+    <button class="addbtn" id="openAdd" type="button">+ add a verb</button>
+  </header>
+
+  <div class="pronouns" id="pronouns"></div>
+
+  <div class="track">
+    <div class="track-line"></div>
+    <div class="track-nodes" id="trackNodes"></div>
+    <div class="tlabels" id="trackLabels"></div>
+  </div>
+
+  <div class="verbs" id="verbChips"></div>
+
+  <div class="stage">
+    <div class="card" id="card">
+      <div class="face front">
+        <div class="tag" id="frontTag"></div>
+        <div class="pronoun-word" id="frontPronoun"></div>
+        <div class="verb-word" id="frontVerb"></div>
+        <div class="hint">tap to reveal</div>
+      </div>
+      <div class="face back">
+        <div class="tag" id="backTag"></div>
+        <div class="form" id="backForm"></div>
+        <div class="gloss" id="backGloss"></div>
+        <div class="example" id="backExample" style="display:none;">
+          <div class="es" id="exEs"></div>
+          <div class="en" id="exEn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="navbtn" id="prevBtn">‹ Prev</button>
+    <div class="counter" id="counter"></div>
+    <button class="navbtn" id="nextBtn">Next ›</button>
+  </div>
+  <div class="kbd-hint">← → to move · space to flip</div>
+</div>
+
+<div class="modal-backdrop hidden" id="modalBackdrop">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<script>
+var PRONOUNS = [
+  { key:'yo',       label:'yo',       color:'#C00000' },
+  { key:'tu',        label:'tú',       color:'#FF8C00' },
+  { key:'el',        label:'él/ella',  color:'#0070C0' },
+  { key:'nosotros',  label:'nosotros', color:'#009900' },
+  { key:'vosotros',  label:'vosotros', color:'#800080' },
+  { key:'ellos',     label:'ellos',    color:'#00AAAA' },
+];
+var PRONOUN_KEYS = PRONOUNS.map(function(p){ return p.key; });
+var TENSES = ['Present','Preterite','Imperfect','Future','Conditional'];
+var STORAGE_KEY = 'destello-spanish-flashcards-v1';
+
+/* regular endings, attached to the stem (infinitive minus -ar/-er/-ir) */
+var ENDINGS = {
+  ar: {
+    Present:   ['o','as','a','amos','áis','an'],
+    Preterite: ['é','aste','ó','amos','asteis','aron'],
+    Imperfect: ['aba','abas','aba','ábamos','abais','aban']
+  },
+  er: {
+    Present:   ['o','es','e','emos','éis','en'],
+    Preterite: ['í','iste','ió','imos','isteis','ieron'],
+    Imperfect: ['ía','ías','ía','íamos','íais','ían']
+  },
+  ir: {
+    Present:   ['o','es','e','imos','ís','en'],
+    Preterite: ['í','iste','ió','imos','isteis','ieron'],
+    Imperfect: ['ía','ías','ía','íamos','íais','ían']
+  }
+};
+/* future & conditional attach to the full infinitive, same for all three conjugations */
+var FUTURE_ENDINGS = ['é','ás','á','emos','éis','án'];
+var CONDITIONAL_ENDINGS = ['ía','ías','ía','íamos','íais','ían'];
+
+function detectType(infinitive){
+  var end = infinitive.slice(-2).toLowerCase();
+  if (end==='ar' || end==='er' || end==='ir') return end;
+  return null;
+}
+
+function generateConjugation(infinitive){
+  var type = detectType(infinitive);
+  var conj = {};
+  if (!type){
+    TENSES.forEach(function(t){
+      conj[t] = {};
+      PRONOUN_KEYS.forEach(function(p){ conj[t][p] = ''; });
+    });
+    return conj;
+  }
+  var stem = infinitive.slice(0, -2);
+  ['Present','Preterite','Imperfect'].forEach(function(tense){
+    var endings = ENDINGS[type][tense];
+    conj[tense] = {};
+    PRONOUN_KEYS.forEach(function(p, i){ conj[tense][p] = stem + endings[i]; });
+  });
+  conj.Future = {};
+  conj.Conditional = {};
+  PRONOUN_KEYS.forEach(function(p, i){
+    conj.Future[p] = infinitive + FUTURE_ENDINGS[i];
+    conj.Conditional[p] = infinitive + CONDITIONAL_ENDINGS[i];
+  });
+  return conj;
+}
+
+function defaultVerbs(){
+  return [
+    {
+      name:'hablar', meaning:'to speak',
+      conj:{
+        Present:{yo:'hablo',tu:'hablas',el:'habla',nosotros:'hablamos',vosotros:'habláis',ellos:'hablan'},
+        Preterite:{yo:'hablé',tu:'hablaste',el:'habló',nosotros:'hablamos',vosotros:'hablasteis',ellos:'hablaron'},
+        Imperfect:{yo:'hablaba',tu:'hablabas',el:'hablaba',nosotros:'hablábamos',vosotros:'hablabais',ellos:'hablaban'},
+        Future:{yo:'hablaré',tu:'hablarás',el:'hablará',nosotros:'hablaremos',vosotros:'hablaréis',ellos:'hablarán'},
+        Conditional:{yo:'hablaría',tu:'hablarías',el:'hablaría',nosotros:'hablaríamos',vosotros:'hablaríais',ellos:'hablarían'}
+      },
+      examples:{
+        Present:{es:'Yo hablo español.', en:'I speak Spanish.'},
+        Preterite:{es:'Ayer hablé con mi amigo.', en:'Yesterday I spoke with my friend.'},
+        Imperfect:{es:'Cuando era niño, hablaba mucho.', en:'When I was a child, I used to talk a lot.'},
+        Future:{es:'Mañana hablaré contigo.', en:'Tomorrow I will speak with you.'},
+        Conditional:{es:'Hablaría más si tuviera tiempo.', en:'I would speak more if I had time.'}
+      }
+    },
+    {
+      name:'comer', meaning:'to eat',
+      conj:{
+        Present:{yo:'como',tu:'comes',el:'come',nosotros:'comemos',vosotros:'coméis',ellos:'comen'},
+        Preterite:{yo:'comí',tu:'comiste',el:'comió',nosotros:'comimos',vosotros:'comisteis',ellos:'comieron'},
+        Imperfect:{yo:'comía',tu:'comías',el:'comía',nosotros:'comíamos',vosotros:'comíais',ellos:'comían'},
+        Future:{yo:'comeré',tu:'comerás',el:'comerá',nosotros:'comeremos',vosotros:'comeréis',ellos:'comerán'},
+        Conditional:{yo:'comería',tu:'comerías',el:'comería',nosotros:'comeríamos',vosotros:'comeríais',ellos:'comerían'}
+      }
+    },
+    {
+      name:'vivir', meaning:'to live',
+      conj:{
+        Present:{yo:'vivo',tu:'vives',el:'vive',nosotros:'vivimos',vosotros:'vivís',ellos:'viven'},
+        Preterite:{yo:'viví',tu:'viviste',el:'vivió',nosotros:'vivimos',vosotros:'vivisteis',ellos:'vivieron'},
+        Imperfect:{yo:'vivía',tu:'vivías',el:'vivía',nosotros:'vivíamos',vosotros:'vivíais',ellos:'vivían'},
+        Future:{yo:'viviré',tu:'vivirás',el:'vivirá',nosotros:'viviremos',vosotros:'viviréis',ellos:'vivirán'},
+        Conditional:{yo:'viviría',tu:'vivirías',el:'viviría',nosotros:'viviríamos',vosotros:'viviríais',ellos:'vivirían'}
+      }
+    }
+  ];
+}
+
+function loadVerbs(){
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch(e){ /* ignore corrupt storage, fall back to defaults */ }
+  return defaultVerbs();
+}
+
+function saveVerbs(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(VERBS_DATA)); }
+  catch(e){ console.error('Could not save verbs to this browser', e); }
+}
+
+var VERBS_DATA = loadVerbs();
+var currentPronoun = 'yo';
+var deck = [];
+var idx = 0;
+var flipped = false;
+var modalView = null; /* null | 'list' | 'form' */
+var pendingConj = null;
+
+function buildDeck(pronounKey){
+  var d = [];
+  TENSES.forEach(function(tense){
+    VERBS_DATA.forEach(function(v){
+      d.push({ tense:tense, verb:v, form:(v.conj[tense] ? v.conj[tense][pronounKey] : '') || '' });
+    });
+  });
+  return d;
+}
+
+function accentColor(){
+  return PRONOUNS.find(function(p){ return p.key===currentPronoun; }).color;
+}
+
+function renderPronounChips(){
+  var el = document.getElementById('pronouns');
+  el.innerHTML = '';
+  PRONOUNS.forEach(function(p){
+    var b = document.createElement('button');
+    b.className = 'pchip' + (p.key===currentPronoun ? ' active':'');
+    b.style.setProperty('--chip-color', p.color);
+    b.textContent = p.label;
+    b.setAttribute('aria-pressed', p.key===currentPronoun);
+    b.onclick = function(){ selectPronoun(p.key); };
+    el.appendChild(b);
+  });
+}
+
+function renderTrack(){
+  var nodes = document.getElementById('trackNodes');
+  var labels = document.getElementById('trackLabels');
+  nodes.innerHTML = ''; labels.innerHTML = '';
+  var currentTense = deck[idx] ? deck[idx].tense : null;
+  TENSES.forEach(function(t){
+    var n = document.createElement('div');
+    n.className = 'tnode' + (t===currentTense ? ' active':'');
+    n.style.setProperty('--accent', accentColor());
+    n.onclick = function(){ jumpToTense(t); };
+    nodes.appendChild(n);
+
+    var s = document.createElement('span');
+    s.textContent = t;
+    s.className = t===currentTense ? 'active':'';
+    s.style.setProperty('--accent', accentColor());
+    labels.appendChild(s);
+  });
+}
+
+function renderVerbChips(){
+  var el = document.getElementById('verbChips');
+  el.innerHTML = '';
+  var current = deck[idx];
+  VERBS_DATA.forEach(function(v){
+    var b = document.createElement('button');
+    b.className = 'vchip' + (current && current.verb.name===v.name ? ' active':'');
+    b.textContent = v.name.toLowerCase();
+    b.onclick = function(){ jumpToVerb(v.name); };
+    el.appendChild(b);
+  });
+}
+
+function jumpToTense(tense){
+  var i = deck.findIndex(function(c){ return c.tense===tense; });
+  if (i>=0){ idx=i; flipped=false; render(); }
+}
+function jumpToVerb(name){
+  var currentTense = deck[idx].tense;
+  var i = deck.findIndex(function(c){ return c.tense===currentTense && c.verb.name===name; });
+  if (i>=0){ idx=i; flipped=false; render(); }
+}
+
+function selectPronoun(key){
+  currentPronoun = key;
+  deck = buildDeck(key);
+  idx = Math.min(idx, deck.length-1);
+  flipped = false;
+  render();
+}
+
+function splitFormEls(card){
+  var container = document.createDocumentFragment();
+  var type = detectType(card.verb.name);
+  var stem = type ? card.verb.name.slice(0, -2) : null;
+  var form = card.form;
+  var stemSpan = document.createElement('span');
+  var endSpan = document.createElement('span');
+  endSpan.className = 'ending';
+  if (stem && form.indexOf(stem)===0){
+    stemSpan.className = 'stem';
+    stemSpan.textContent = stem;
+    endSpan.textContent = form.slice(stem.length);
+    container.appendChild(stemSpan);
+    container.appendChild(endSpan);
+  } else {
+    stemSpan.className = 'stem';
+    stemSpan.textContent = form;
+    container.appendChild(stemSpan);
+  }
+  return container;
+}
+
+function render(){
+  if (deck.length===0){ deck = buildDeck(currentPronoun); }
+  var card = deck[idx];
+  var accent = accentColor();
+  document.documentElement.style.setProperty('--accent', accent);
+
+  renderPronounChips();
+  renderTrack();
+  renderVerbChips();
+
+  var pronounLabel = PRONOUNS.find(function(p){ return p.key===currentPronoun; }).label;
+
+  document.getElementById('frontTag').textContent = card.tense;
+  document.getElementById('frontTag').style.setProperty('--accent', accent);
+  document.getElementById('frontPronoun').textContent = pronounLabel;
+  document.getElementById('frontPronoun').style.setProperty('--accent', accent);
+  document.getElementById('frontVerb').textContent = card.verb.name.toLowerCase();
+
+  document.getElementById('backTag').textContent = pronounLabel + ' · ' + card.verb.name.toLowerCase();
+  document.getElementById('backTag').style.setProperty('--accent', accent);
+  var backForm = document.getElementById('backForm');
+  backForm.innerHTML = '';
+  backForm.appendChild(splitFormEls(card));
+  backForm.style.setProperty('--accent', accent);
+  document.getElementById('backGloss').textContent = card.verb.meaning || '';
+
+  var exBlock = document.getElementById('backExample');
+  var ex = card.verb.examples && card.verb.examples[card.tense];
+  if (currentPronoun==='yo' && ex){
+    exBlock.style.display = 'block';
+    document.getElementById('exEs').textContent = ex.es;
+    document.getElementById('exEn').textContent = ex.en;
+  } else {
+    exBlock.style.display = 'none';
+  }
+
+  document.getElementById('card').classList.toggle('flipped', flipped);
+  document.getElementById('counter').textContent = (idx+1) + ' / ' + deck.length;
+  document.getElementById('prevBtn').disabled = idx===0;
+  document.getElementById('nextBtn').disabled = idx===deck.length-1;
+}
+
+document.getElementById('card').addEventListener('click', function(){
+  flipped = !flipped;
+  render();
+});
+document.getElementById('prevBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  if (idx>0){ idx--; flipped=false; render(); }
+});
+document.getElementById('nextBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  if (idx<deck.length-1){ idx++; flipped=false; render(); }
+});
+document.addEventListener('keydown', function(e){
+  if (modalView) {
+    if (e.key==='Escape'){ closeModal(); }
+    return;
+  }
+  if (e.key==='ArrowRight' && idx<deck.length-1){ idx++; flipped=false; render(); }
+  if (e.key==='ArrowLeft' && idx>0){ idx--; flipped=false; render(); }
+  if (e.key===' '){ e.preventDefault(); flipped=!flipped; render(); }
+});
+
+/* ---------- add / manage verbs modal ---------- */
+
+function openModal(){
+  modalView = 'list';
+  document.getElementById('modalBackdrop').classList.remove('hidden');
+  renderModal();
+}
+function closeModal(){
+  modalView = null;
+  pendingConj = null;
+  document.getElementById('modalBackdrop').classList.add('hidden');
+}
+document.getElementById('openAdd').addEventListener('click', openModal);
+document.getElementById('modalBackdrop').addEventListener('click', function(e){
+  if (e.target.id==='modalBackdrop') closeModal();
+});
+
+function renderModal(){
+  var host = document.getElementById('modalCard');
+  host.innerHTML = '';
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.type = 'button';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = closeModal;
+  host.appendChild(closeBtn);
+
+  if (modalView==='list'){
+    var eyebrow = document.createElement('div');
+    eyebrow.className = 'modal-eyebrow';
+    eyebrow.textContent = 'your deck';
+    host.appendChild(eyebrow);
+
+    var title = document.createElement('div');
+    title.className = 'modal-title';
+    title.textContent = 'Verbs (' + VERBS_DATA.length + ')';
+    host.appendChild(title);
+
+    VERBS_DATA.forEach(function(v){
+      var row = document.createElement('div');
+      row.className = 'word-row';
+
+      var main = document.createElement('div');
+      main.className = 'word-main';
+      var nameEl = document.createElement('div');
+      nameEl.className = 'word-name';
+      nameEl.textContent = v.name;
+      var meaningEl = document.createElement('div');
+      meaningEl.className = 'word-meaning';
+      meaningEl.textContent = v.meaning || '';
+      main.appendChild(nameEl);
+      main.appendChild(meaningEl);
+
+      var del = document.createElement('button');
+      del.className = 'word-del';
+      del.type = 'button';
+      del.textContent = '×';
+      del.title = 'Remove ' + v.name;
+      del.onclick = function(){ deleteVerb(v.name); };
+
+      row.appendChild(main);
+      row.appendChild(del);
+      host.appendChild(row);
+    });
+
+    var newBtn = document.createElement('button');
+    newBtn.className = 'modal-newbtn';
+    newBtn.type = 'button';
+    newBtn.textContent = '+ Add a new verb';
+    newBtn.onclick = function(){ modalView = 'form'; pendingConj = null; renderModal(); };
+    host.appendChild(newBtn);
+  }
+
+  if (modalView==='form'){
+    var eyebrow2 = document.createElement('div');
+    eyebrow2.className = 'modal-eyebrow';
+    eyebrow2.textContent = 'new verb';
+    host.appendChild(eyebrow2);
+
+    var title2 = document.createElement('div');
+    title2.className = 'modal-title';
+    title2.textContent = 'Add a verb';
+    host.appendChild(title2);
+
+    var nameRow = document.createElement('div');
+    nameRow.className = 'form-row';
+    var nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Infinitive';
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = 'newVerbName';
+    nameInput.placeholder = 'e.g. estudiar';
+    nameRow.appendChild(nameLabel);
+    nameRow.appendChild(nameInput);
+
+    var meaningRow = document.createElement('div');
+    meaningRow.className = 'form-row';
+    var meaningLabel = document.createElement('label');
+    meaningLabel.textContent = 'Meaning';
+    var meaningInput = document.createElement('input');
+    meaningInput.type = 'text';
+    meaningInput.id = 'newVerbMeaning';
+    meaningInput.placeholder = 'e.g. to study';
+    meaningRow.appendChild(meaningLabel);
+    meaningRow.appendChild(meaningInput);
+
+    host.appendChild(nameRow);
+    host.appendChild(meaningRow);
+
+    if (!pendingConj){
+      var genBtn = document.createElement('button');
+      genBtn.className = 'navbtn';
+      genBtn.type = 'button';
+      genBtn.style.width = '100%';
+      genBtn.textContent = 'Generate conjugation table';
+      genBtn.onclick = function(){
+        var name = nameInput.value.trim().toLowerCase();
+        if (!name){ nameInput.focus(); return; }
+        pendingConj = generateConjugation(name);
+        renderModal();
+      };
+      host.appendChild(genBtn);
+    } else {
+      var name = nameInput.value.trim().toLowerCase();
+      if (!detectType(name)){
+        var note = document.createElement('div');
+        note.className = 'form-note';
+        note.textContent = 'Doesn’t end in -ar/-er/-ir — fill in every form by hand below.';
+        host.appendChild(note);
+      } else {
+        var note2 = document.createElement('div');
+        note2.className = 'form-note';
+        note2.textContent = 'Regular forms filled in — edit any cell for irregular verbs.';
+        host.appendChild(note2);
+      }
+
+      var table = document.createElement('table');
+      table.className = 'conj-table';
+      var thead = document.createElement('thead');
+      var headRow = document.createElement('tr');
+      var thTense = document.createElement('th');
+      thTense.textContent = '';
+      headRow.appendChild(thTense);
+      PRONOUNS.forEach(function(p){
+        var th = document.createElement('th');
+        th.textContent = p.label;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbody = document.createElement('tbody');
+      TENSES.forEach(function(tense){
+        var tr = document.createElement('tr');
+        var th = document.createElement('td');
+        th.textContent = tense;
+        tr.appendChild(th);
+        PRONOUN_KEYS.forEach(function(pk){
+          var td = document.createElement('td');
+          var input = document.createElement('input');
+          input.type = 'text';
+          input.setAttribute('data-tense', tense);
+          input.setAttribute('data-pronoun', pk);
+          input.value = pendingConj[tense][pk] || '';
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      host.appendChild(table);
+
+      var actions = document.createElement('div');
+      actions.className = 'form-actions';
+
+      var back = document.createElement('button');
+      back.className = 'ghostbtn';
+      back.type = 'button';
+      back.textContent = 'Back';
+      back.onclick = function(){ pendingConj = null; renderModal(); };
+
+      var save = document.createElement('button');
+      save.className = 'navbtn';
+      save.type = 'button';
+      save.textContent = 'Save verb';
+      save.onclick = function(){
+        var finalName = nameInput.value.trim().toLowerCase();
+        if (!finalName){ nameInput.focus(); return; }
+        var conj = {};
+        TENSES.forEach(function(tense){
+          conj[tense] = {};
+          PRONOUN_KEYS.forEach(function(pk){
+            var input = table.querySelector('input[data-tense="' + tense + '"][data-pronoun="' + pk + '"]');
+            conj[tense][pk] = input.value.trim();
+          });
+        });
+        var verb = { name: finalName, meaning: meaningInput.value.trim(), conj: conj };
+        var existingIdx = VERBS_DATA.findIndex(function(v){ return v.name===finalName; });
+        if (existingIdx>=0) VERBS_DATA[existingIdx] = verb;
+        else VERBS_DATA.push(verb);
+        saveVerbs();
+        closeModal();
+        deck = buildDeck(currentPronoun);
+        jumpToVerb(finalName);
+        render();
+      };
+
+      actions.appendChild(back);
+      actions.appendChild(save);
+      host.appendChild(actions);
+    }
+  }
+}
+
+function deleteVerb(name){
+  if (VERBS_DATA.length<=1) return;
+  if (!window.confirm('Remove ' + name + ' from your deck?')) return;
+  VERBS_DATA = VERBS_DATA.filter(function(v){ return v.name!==name; });
+  saveVerbs();
+  deck = buildDeck(currentPronoun);
+  idx = 0; flipped = false;
+  render();
+  renderModal();
+}
+
+deck = buildDeck(currentPronoun);
+render();
+</script>
+</body>
+</html>
