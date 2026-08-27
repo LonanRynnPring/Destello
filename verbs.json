@@ -1,0 +1,42 @@
+[
+  {
+    "name": "hablar",
+    "meaning": "to speak",
+    "conj": {
+      "Present": {"yo": "hablo", "tu": "hablas", "el": "habla", "nosotros": "hablamos", "vosotros": "habláis", "ellos": "hablan"},
+      "Preterite": {"yo": "hablé", "tu": "hablaste", "el": "habló", "nosotros": "hablamos", "vosotros": "hablasteis", "ellos": "hablaron"},
+      "Imperfect": {"yo": "hablaba", "tu": "hablabas", "el": "hablaba", "nosotros": "hablábamos", "vosotros": "hablabais", "ellos": "hablaban"},
+      "Future": {"yo": "hablaré", "tu": "hablarás", "el": "hablará", "nosotros": "hablaremos", "vosotros": "hablaréis", "ellos": "hablarán"},
+      "Conditional": {"yo": "hablaría", "tu": "hablarías", "el": "hablaría", "nosotros": "hablaríamos", "vosotros": "hablaríais", "ellos": "hablarían"}
+    },
+    "examples": {
+      "Present": {"es": "Yo hablo español.", "en": "I speak Spanish."},
+      "Preterite": {"es": "Ayer hablé con mi amigo.", "en": "Yesterday I spoke with my friend."},
+      "Imperfect": {"es": "Cuando era niño, hablaba mucho.", "en": "When I was a child, I used to talk a lot."},
+      "Future": {"es": "Mañana hablaré contigo.", "en": "Tomorrow I will speak with you."},
+      "Conditional": {"es": "Hablaría más si tuviera tiempo.", "en": "I would speak more if I had time."}
+    }
+  },
+  {
+    "name": "comer",
+    "meaning": "to eat",
+    "conj": {
+      "Present": {"yo": "como", "tu": "comes", "el": "come", "nosotros": "comemos", "vosotros": "coméis", "ellos": "comen"},
+      "Preterite": {"yo": "comí", "tu": "comiste", "el": "comió", "nosotros": "comimos", "vosotros": "comisteis", "ellos": "comieron"},
+      "Imperfect": {"yo": "comía", "tu": "comías", "el": "comía", "nosotros": "comíamos", "vosotros": "comíais", "ellos": "comían"},
+      "Future": {"yo": "comeré", "tu": "comerás", "el": "comerá", "nosotros": "comeremos", "vosotros": "comeréis", "ellos": "comerán"},
+      "Conditional": {"yo": "comería", "tu": "comerías", "el": "comería", "nosotros": "comeríamos", "vosotros": "comeríais", "ellos": "comerían"}
+    }
+  },
+  {
+    "name": "vivir",
+    "meaning": "to live",
+    "conj": {
+      "Present": {"yo": "vivo", "tu": "vives", "el": "vive", "nosotros": "vivimos", "vosotros": "vivís", "ellos": "viven"},
+      "Preterite": {"yo": "viví", "tu": "viviste", "el": "vivió", "nosotros": "vivimos", "vosotros": "vivisteis", "ellos": "vivieron"},
+      "Imperfect": {"yo": "vivía", "tu": "vivías", "el": "vivía", "nosotros": "vivíamos", "vosotros": "vivíais", "ellos": "vivían"},
+      "Future": {"yo": "viviré", "tu": "vivirás", "el": "vivirá", "nosotros": "viviremos", "vosotros": "viviréis", "ellos": "vivirán"},
+      "Conditional": {"yo": "viviría", "tu": "vivirías", "el": "viviría", "nosotros": "viviríamos", "vosotros": "viviríais", "ellos": "vivirían"}
+    }
+  }
+]

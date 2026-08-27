@@ -372,6 +372,22 @@
     border:1.5px solid var(--ink); background:var(--ink); color:#fff;
     cursor:pointer;
   }
+  .sync-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--ring);
+  }
+  .sync-status{ font-size:11.5px; color:var(--ink-soft); }
+  .sync-status.connected{ color:#0A8A3E; }
+  .sync-status.error{ color:var(--margin-red); }
+  .sync-status.saving{ color:var(--ink-soft); font-style:italic; }
+  .sync-link{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--ink-soft); background:transparent;
+    border:1.5px solid var(--ring); border-radius:999px;
+    padding:6px 11px; cursor:pointer; flex:none;
+  }
+  .sync-link:hover{ border-color:var(--ink); color:var(--ink); }
   .form-row{ margin-bottom:14px; }
   .form-row label{
     display:block;
@@ -433,7 +449,7 @@
   <header>
     <div class="eyebrow">from your tenses notes</div>
     <h1>One pronoun at a time</h1>
-    <div class="sub">Pick a pronoun below, then flip through every tense for each verb before moving to the next one. Add your own verbs any time — they're saved to this browser.</div>
+    <div class="sub">Pick a pronoun below, then flip through every tense for each verb before moving to the next one. Add your own verbs any time — connect GitHub sync so every device sees the same deck.</div>
     <button class="addbtn" id="openAdd" type="button">+ add a verb</button>
   </header>
 
@@ -491,6 +507,11 @@ var PRONOUNS = [
 var PRONOUN_KEYS = PRONOUNS.map(function(p){ return p.key; });
 var TENSES = ['Present','Preterite','Imperfect','Future','Conditional'];
 var STORAGE_KEY = 'destello-spanish-flashcards-v1';
+var TOKEN_KEY = 'destello-gh-token';
+var GITHUB_OWNER = 'LonanRynnPring';
+var GITHUB_REPO = 'Destello';
+var GITHUB_PATH = 'verbs.json';
+var GITHUB_BRANCH = 'main';
 
 /* regular endings, attached to the stem (infinitive minus -ar/-er/-ir) */
 var ENDINGS = {
@@ -587,7 +608,7 @@ function defaultVerbs(){
   ];
 }
 
-function loadVerbs(){
+function loadVerbsLocalCache(){
   try {
     var raw = localStorage.getItem(STORAGE_KEY);
     if (raw){
@@ -598,12 +619,117 @@ function loadVerbs(){
   return defaultVerbs();
 }
 
-function saveVerbs(){
+function saveVerbsLocalCache(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(VERBS_DATA)); }
-  catch(e){ console.error('Could not save verbs to this browser', e); }
+  catch(e){ console.error('Could not cache verbs in this browser', e); }
 }
 
-var VERBS_DATA = loadVerbs();
+function getToken(){
+  try { return localStorage.getItem(TOKEN_KEY) || ''; }
+  catch(e){ return ''; }
+}
+function setToken(token){
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch(e){ /* ignore */ }
+}
+
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, hex){
+    return String.fromCharCode(parseInt(hex, 16));
+  }));
+}
+
+function fetchSharedVerbs(){
+  return fetch('verbs.json?t=' + Date.now(), { cache:'no-store' })
+    .then(function(res){ if (!res.ok) throw new Error('fetch failed'); return res.json(); })
+    .then(function(data){
+      if (Array.isArray(data) && data.length) return data;
+      throw new Error('empty verbs.json');
+    });
+}
+
+var syncStatus = getToken() ? 'connected' : 'disconnected'; /* disconnected | connected | saving | error */
+var syncMessage = '';
+
+function githubApiUrl(){
+  return 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_PATH;
+}
+
+function commitVerbsToGitHub(commitMessage, isRetry){
+  var token = getToken();
+  if (!token) return Promise.resolve(false);
+  syncStatus = 'saving'; syncMessage = ''; renderSyncStatus();
+  return fetch(githubApiUrl(), {
+    headers: { 'Authorization':'token ' + token, 'Accept':'application/vnd.github+json' }
+  })
+    .then(function(res){
+      if (res.status===404) return { sha:null };
+      if (!res.ok) throw new Error('Could not read the file on GitHub (status ' + res.status + ')');
+      return res.json();
+    })
+    .then(function(current){
+      var body = {
+        message: commitMessage,
+        content: b64EncodeUnicode(JSON.stringify(VERBS_DATA, null, 2)),
+        branch: GITHUB_BRANCH
+      };
+      if (current && current.sha) body.sha = current.sha;
+      return fetch(githubApiUrl(), {
+        method:'PUT',
+        headers: {
+          'Authorization':'token ' + token,
+          'Accept':'application/vnd.github+json',
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+    })
+    .then(function(res){
+      if (res.status===409 && !isRetry) return commitVerbsToGitHub(commitMessage, true);
+      if (!res.ok){
+        return res.json().catch(function(){ return {}; }).then(function(err){
+          throw new Error(err.message || ('GitHub returned status ' + res.status));
+        });
+      }
+      syncStatus = 'connected'; syncMessage = '';
+      renderSyncStatus();
+      return true;
+    })
+    .catch(function(err){
+      syncStatus = 'error';
+      syncMessage = (err && err.message) || 'Sync failed';
+      renderSyncStatus();
+      return false;
+    });
+}
+
+function persistVerbs(commitMessage){
+  saveVerbsLocalCache();
+  if (getToken()) commitVerbsToGitHub(commitMessage);
+}
+
+function renderSyncStatus(){
+  var el = document.getElementById('syncStatus');
+  if (!el) return;
+  var token = getToken();
+  if (!token){
+    el.textContent = 'Not connected — changes save to this browser only.';
+    el.className = 'sync-status';
+  } else if (syncStatus==='saving'){
+    el.textContent = 'Saving to GitHub…';
+    el.className = 'sync-status saving';
+  } else if (syncStatus==='error'){
+    el.textContent = 'Sync failed: ' + syncMessage;
+    el.className = 'sync-status error';
+  } else {
+    el.textContent = 'Connected — changes commit to github.com/' + GITHUB_OWNER + '/' + GITHUB_REPO;
+    el.className = 'sync-status connected';
+  }
+}
+
+var VERBS_DATA = loadVerbsLocalCache();
 var currentPronoun = 'yo';
 var deck = [];
 var idx = 0;
@@ -815,6 +941,20 @@ function renderModal(){
     title.textContent = 'Verbs (' + VERBS_DATA.length + ')';
     host.appendChild(title);
 
+    var syncRow = document.createElement('div');
+    syncRow.className = 'sync-row';
+    var syncStatusEl = document.createElement('div');
+    syncStatusEl.id = 'syncStatus';
+    var syncBtn = document.createElement('button');
+    syncBtn.type = 'button';
+    syncBtn.className = 'sync-link';
+    syncBtn.textContent = getToken() ? 'Manage sync' : 'Connect GitHub';
+    syncBtn.onclick = function(){ modalView = 'settings'; renderModal(); };
+    syncRow.appendChild(syncStatusEl);
+    syncRow.appendChild(syncBtn);
+    host.appendChild(syncRow);
+    renderSyncStatus();
+
     VERBS_DATA.forEach(function(v){
       var row = document.createElement('div');
       row.className = 'word-row';
@@ -975,9 +1115,10 @@ function renderModal(){
         });
         var verb = { name: finalName, meaning: meaningInput.value.trim(), conj: conj };
         var existingIdx = VERBS_DATA.findIndex(function(v){ return v.name===finalName; });
+        var verbAction = existingIdx>=0 ? 'Update verb' : 'Add verb';
         if (existingIdx>=0) VERBS_DATA[existingIdx] = verb;
         else VERBS_DATA.push(verb);
-        saveVerbs();
+        persistVerbs(verbAction + ': ' + finalName);
         closeModal();
         deck = buildDeck(currentPronoun);
         jumpToVerb(finalName);
@@ -989,13 +1130,89 @@ function renderModal(){
       host.appendChild(actions);
     }
   }
+
+  if (modalView==='settings'){
+    var eyebrow3 = document.createElement('div');
+    eyebrow3.className = 'modal-eyebrow';
+    eyebrow3.textContent = 'sync';
+    host.appendChild(eyebrow3);
+
+    var title3 = document.createElement('div');
+    title3.className = 'modal-title';
+    title3.textContent = 'GitHub sync';
+    host.appendChild(title3);
+
+    var statusLine = document.createElement('div');
+    statusLine.id = 'syncStatus';
+    statusLine.style.marginBottom = '14px';
+    host.appendChild(statusLine);
+
+    var help = document.createElement('p');
+    help.className = 'form-note';
+    help.style.margin = '0 0 14px';
+    help.textContent = 'Paste a fine-grained GitHub token scoped to just the ' + GITHUB_OWNER + '/' + GITHUB_REPO + ' repo, with "Contents: Read and write" permission. It is stored only in this browser and used to commit verbs.json directly to GitHub.';
+    host.appendChild(help);
+
+    var tokenRow = document.createElement('div');
+    tokenRow.className = 'form-row';
+    var tokenLabel = document.createElement('label');
+    tokenLabel.textContent = 'Personal access token';
+    var tokenInput = document.createElement('input');
+    tokenInput.type = 'password';
+    tokenInput.id = 'ghTokenInput';
+    tokenInput.placeholder = getToken() ? '•••••••••••••••••••• (saved)' : 'github_pat_…';
+    tokenRow.appendChild(tokenLabel);
+    tokenRow.appendChild(tokenInput);
+    host.appendChild(tokenRow);
+
+    var actions3 = document.createElement('div');
+    actions3.className = 'form-actions';
+
+    var back3 = document.createElement('button');
+    back3.className = 'ghostbtn';
+    back3.type = 'button';
+    back3.textContent = 'Disconnect';
+    back3.onclick = function(){
+      setToken('');
+      syncStatus = 'disconnected';
+      renderModal();
+    };
+
+    var save3 = document.createElement('button');
+    save3.className = 'navbtn';
+    save3.type = 'button';
+    save3.textContent = 'Save token';
+    save3.onclick = function(){
+      var val = tokenInput.value.trim();
+      if (!val) return;
+      setToken(val);
+      commitVerbsToGitHub('Sync verbs from Conjugation Deck').then(function(ok){
+        if (ok){ modalView = 'list'; renderModal(); }
+      });
+    };
+
+    actions3.appendChild(back3);
+    actions3.appendChild(save3);
+    host.appendChild(actions3);
+
+    var backToList = document.createElement('button');
+    backToList.className = 'ghostbtn';
+    backToList.type = 'button';
+    backToList.style.width = '100%';
+    backToList.style.marginTop = '10px';
+    backToList.textContent = 'Back to your verbs';
+    backToList.onclick = function(){ modalView = 'list'; renderModal(); };
+    host.appendChild(backToList);
+
+    renderSyncStatus();
+  }
 }
 
 function deleteVerb(name){
   if (VERBS_DATA.length<=1) return;
   if (!window.confirm('Remove ' + name + ' from your deck?')) return;
   VERBS_DATA = VERBS_DATA.filter(function(v){ return v.name!==name; });
-  saveVerbs();
+  persistVerbs('Remove verb: ' + name);
   deck = buildDeck(currentPronoun);
   idx = 0; flipped = false;
   render();
@@ -1004,6 +1221,14 @@ function deleteVerb(name){
 
 deck = buildDeck(currentPronoun);
 render();
+
+fetchSharedVerbs().then(function(data){
+  VERBS_DATA = data;
+  saveVerbsLocalCache();
+  deck = buildDeck(currentPronoun);
+  idx = Math.min(idx, deck.length-1);
+  render();
+}).catch(function(){ /* offline or first load without hosting — keep local/default verbs */ });
 </script>
 </body>
 </html>
