@@ -243,6 +243,13 @@
     color:var(--ink-soft);
     margin-top:8px;
   }
+  .front .example{
+    margin-top:14px;
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
   .front .hint{
     margin-top:16px;
     font-size:11px;
@@ -453,6 +460,9 @@
         <div class="tag" id="frontTag"></div>
         <div class="pronoun-word" id="frontPronoun"></div>
         <div class="verb-word" id="frontVerb"></div>
+        <div class="example" id="frontExample" style="display:none;">
+          <div class="en" id="frontExEn"></div>
+        </div>
         <div class="hint">tap to reveal</div>
       </div>
       <div class="face back">
@@ -767,6 +777,15 @@ function render(){
   document.getElementById('frontPronoun').textContent = pronounLabel;
   document.getElementById('frontPronoun').style.setProperty('--accent', accent);
   document.getElementById('frontVerb').textContent = card.verb.name.toLowerCase();
+
+  var frontExBlock = document.getElementById('frontExample');
+  var frontEx = card.verb.examples && card.verb.examples[card.tense];
+  if (currentPronoun==='yo' && frontEx){
+    frontExBlock.style.display = 'block';
+    document.getElementById('frontExEn').textContent = frontEx.en;
+  } else {
+    frontExBlock.style.display = 'none';
+  }
 
   document.getElementById('backTag').textContent = pronounLabel + ' · ' + card.verb.name.toLowerCase();
   document.getElementById('backTag').style.setProperty('--accent', accent);
