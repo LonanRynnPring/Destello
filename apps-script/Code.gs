@@ -154,6 +154,13 @@ function seedInitialVerbs() {
         Imperfect: { yo: 'comía', tu: 'comías', el: 'comía', nosotros: 'comíamos', vosotros: 'comíais', ellos: 'comían' },
         Future: { yo: 'comeré', tu: 'comerás', el: 'comerá', nosotros: 'comeremos', vosotros: 'comeréis', ellos: 'comerán' },
         Conditional: { yo: 'comería', tu: 'comerías', el: 'comería', nosotros: 'comeríamos', vosotros: 'comeríais', ellos: 'comerían' }
+      },
+      examples: {
+        Present: { es: 'Yo como frutas cada día.', en: 'I eat fruit every day.' },
+        Preterite: { es: 'Ayer comí pizza con mis amigos.', en: 'Yesterday I ate pizza with my friends.' },
+        Imperfect: { es: 'Cuando era niño, comía mucho pan.', en: 'When I was a child, I used to eat a lot of bread.' },
+        Future: { es: 'Mañana comeré en un restaurante nuevo.', en: 'Tomorrow I will eat at a new restaurant.' },
+        Conditional: { es: 'Comería más verduras si tuvieran mejor sabor.', en: 'I would eat more vegetables if they tasted better.' }
       }
     },
     {
@@ -164,6 +171,30 @@ function seedInitialVerbs() {
         Imperfect: { yo: 'vivía', tu: 'vivías', el: 'vivía', nosotros: 'vivíamos', vosotros: 'vivíais', ellos: 'vivían' },
         Future: { yo: 'viviré', tu: 'vivirás', el: 'vivirá', nosotros: 'viviremos', vosotros: 'viviréis', ellos: 'vivirán' },
         Conditional: { yo: 'viviría', tu: 'vivirías', el: 'viviría', nosotros: 'viviríamos', vosotros: 'viviríais', ellos: 'vivirían' }
+      },
+      examples: {
+        Present: { es: 'Yo vivo en una ciudad pequeña.', en: 'I live in a small city.' },
+        Preterite: { es: 'El año pasado viví en Madrid.', en: 'Last year I lived in Madrid.' },
+        Imperfect: { es: 'De pequeño, vivía cerca de la playa.', en: 'As a child, I used to live near the beach.' },
+        Future: { es: 'Algún día viviré en el extranjero.', en: 'Someday I will live abroad.' },
+        Conditional: { es: 'Viviría en el campo si pudiera.', en: 'I would live in the countryside if I could.' }
+      }
+    },
+    {
+      name: 'estudiar', meaning: 'to study',
+      conj: {
+        Present: { yo: 'estudio', tu: 'estudias', el: 'estudia', nosotros: 'estudiamos', vosotros: 'estudiáis', ellos: 'estudian' },
+        Preterite: { yo: 'estudié', tu: 'estudiaste', el: 'estudió', nosotros: 'estudiamos', vosotros: 'estudiasteis', ellos: 'estudiaron' },
+        Imperfect: { yo: 'estudiaba', tu: 'estudiabas', el: 'estudiaba', nosotros: 'estudiábamos', vosotros: 'estudiabais', ellos: 'estudiaban' },
+        Future: { yo: 'estudiaré', tu: 'estudiarás', el: 'estudiará', nosotros: 'estudiaremos', vosotros: 'estudiaréis', ellos: 'estudiarán' },
+        Conditional: { yo: 'estudiaría', tu: 'estudiarías', el: 'estudiaría', nosotros: 'estudiaríamos', vosotros: 'estudiaríais', ellos: 'estudiarían' }
+      },
+      examples: {
+        Present: { es: 'Yo estudio español todos los días.', en: 'I study Spanish every day.' },
+        Preterite: { es: 'Anoche estudié para el examen.', en: 'Last night I studied for the exam.' },
+        Imperfect: { es: 'Cuando estaba en la universidad, estudiaba mucho.', en: 'When I was in university, I used to study a lot.' },
+        Future: { es: 'El próximo mes estudiaré en Barcelona.', en: 'Next month I will study in Barcelona.' },
+        Conditional: { es: 'Estudiaría más si tuviera más tiempo libre.', en: 'I would study more if I had more free time.' }
       }
     }
   ];
