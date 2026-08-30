@@ -661,8 +661,8 @@ var pendingConj = null;
 
 function buildDeck(pronounKey){
   var d = [];
-  TENSES.forEach(function(tense){
-    VERBS_DATA.forEach(function(v){
+  VERBS_DATA.forEach(function(v){
+    TENSES.forEach(function(tense){
       d.push({ tense:tense, verb:v, form:(v.conj[tense] ? v.conj[tense][pronounKey] : '') || '' });
     });
   });
@@ -721,7 +721,8 @@ function renderVerbChips(){
 }
 
 function jumpToTense(tense){
-  var i = deck.findIndex(function(c){ return c.tense===tense; });
+  var currentVerb = deck[idx].verb.name;
+  var i = deck.findIndex(function(c){ return c.tense===tense && c.verb.name===currentVerb; });
   if (i>=0){ idx=i; flipped=false; render(); }
 }
 function jumpToVerb(name){
