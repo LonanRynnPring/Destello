@@ -433,7 +433,7 @@
   <header>
     <div class="eyebrow">from your tenses notes</div>
     <h1>One pronoun at a time</h1>
-    <div class="sub">Pick a pronoun below, then flip through every tense for each verb before moving to the next one. Add your own verbs any time — they're saved to this browser.</div>
+    <div class="sub">Pick a pronoun below, then flip through every tense for each verb before moving to the next one. Add your own verbs any time — they're saved to a shared list everyone sees.</div>
     <button class="addbtn" id="openAdd" type="button">+ add a verb</button>
   </header>
 
@@ -491,6 +491,11 @@ var PRONOUNS = [
 var PRONOUN_KEYS = PRONOUNS.map(function(p){ return p.key; });
 var TENSES = ['Present','Preterite','Imperfect','Future','Conditional'];
 var STORAGE_KEY = 'destello-spanish-flashcards-v1';
+
+/* Paste your Google Apps Script web app URL here once deployed (see
+   apps-script/Code.gs). Leave blank to keep using the local verbs.json
+   snapshot + per-browser storage only. */
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzrS7pqCGQsYf6H7TiFDh30DiR87P0WikqgQE67JNkjAORy750j9cc8n3p4zdz_BJ6TQ/exec';
 
 /* regular endings, attached to the stem (infinitive minus -ar/-er/-ir) */
 var ENDINGS = {
@@ -604,12 +609,36 @@ function saveVerbsLocalCache(){
 }
 
 function fetchSharedVerbs(){
-  return fetch('verbs.json?t=' + Date.now(), { cache:'no-store' })
+  var url = APPS_SCRIPT_URL ? (APPS_SCRIPT_URL + '?t=' + Date.now()) : ('verbs.json?t=' + Date.now());
+  return fetch(url, { cache:'no-store' })
     .then(function(res){ if (!res.ok) throw new Error('fetch failed'); return res.json(); })
     .then(function(data){
       if (Array.isArray(data) && data.length) return data;
-      throw new Error('empty verbs.json');
+      throw new Error('empty verb list');
     });
+}
+
+/* Apps Script can't handle CORS preflight requests, so this is sent as
+   text/plain (a "simple request") even though the body is JSON; doPost()
+   on the other end parses it as JSON regardless of content-type. */
+function postToSheet(payload){
+  if (!APPS_SCRIPT_URL) return Promise.resolve(false);
+  return fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  })
+    .then(function(res){ return res.json(); })
+    .then(function(data){ return !!(data && data.ok); })
+    .catch(function(err){ console.error('Could not sync to the shared sheet', err); return false; });
+}
+
+function syncVerbToSheet(verb){
+  return postToSheet({ verb: verb });
+}
+
+function syncDeleteToSheet(name){
+  return postToSheet({ action:'delete', name: name });
 }
 
 var VERBS_DATA = loadVerbsLocalCache();
@@ -991,6 +1020,7 @@ function renderModal(){
         deck = buildDeck(currentPronoun);
         jumpToVerb(finalName);
         render();
+        syncVerbToSheet(verb);
       };
 
       actions.appendChild(back);
@@ -1010,6 +1040,7 @@ function deleteVerb(name){
   idx = 0; flipped = false;
   render();
   renderModal();
+  syncDeleteToSheet(name);
 }
 
 deck = buildDeck(currentPronoun);

@@ -1,0 +1,13 @@
+// Reference only — this is not picked up automatically. In the Apps Script
+// editor: gear icon (Project Settings) > check "Show 'appsscript.json'
+// manifest file in editor", then open that file and add the oauthScopes
+// key below alongside whatever keys are already there (don't delete the
+// existing timeZone/dependencies/runtimeVersion keys).
+//
+// This restricts the script's Google Sheets access to just the spreadsheet
+// it's bound to, instead of the default "edit all your spreadsheets" scope.
+{
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets.currentonly"
+  ]
+}
