@@ -264,6 +264,30 @@
   }
   .back .form .stem{ color:var(--ink); }
   .back .form .ending{ color:var(--accent, var(--margin-red)); font-weight:700; }
+  .back .form{ -webkit-user-select:none; user-select:none; touch-action:none; }
+  .back .form-edit-input{
+    font-family:'JetBrains Mono', monospace;
+    font-size:32px;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    text-align:center;
+    width:100%;
+    border:none;
+    border-bottom:2px solid var(--accent, var(--margin-red));
+    background:transparent;
+    color:var(--ink);
+    padding:2px 4px;
+  }
+  .back .form-edit-input:focus{ outline:none; }
+  .back .edit-hint{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    opacity:.55;
+    margin-top:6px;
+  }
   .back .gloss{
     margin-top:10px;
     font-size:13.5px;
@@ -468,6 +492,7 @@
       <div class="face back">
         <div class="tag" id="backTag"></div>
         <div class="form" id="backForm"></div>
+        <div class="edit-hint">hold or right-click word to edit</div>
         <div class="gloss" id="backGloss"></div>
         <div class="example" id="backExample" style="display:none;">
           <div class="es" id="exEs"></div>
@@ -812,7 +837,10 @@ function render(){
   document.getElementById('nextBtn').disabled = idx===deck.length-1;
 }
 
+var suppressCardClick = false;
+
 document.getElementById('card').addEventListener('click', function(){
+  if (suppressCardClick){ suppressCardClick = false; return; }
   flipped = !flipped;
   render();
 });
@@ -829,9 +857,93 @@ document.addEventListener('keydown', function(e){
     if (e.key==='Escape'){ closeModal(); }
     return;
   }
+  var activeTag = document.activeElement && document.activeElement.tagName;
+  if (activeTag==='INPUT' || activeTag==='TEXTAREA') return;
   if (e.key==='ArrowRight' && idx<deck.length-1){ idx++; flipped=false; render(); }
   if (e.key==='ArrowLeft' && idx>0){ idx--; flipped=false; render(); }
   if (e.key===' '){ e.preventDefault(); flipped=!flipped; render(); }
+});
+
+/* ---------- hold-to-edit a conjugated word ---------- */
+
+function attachLongPress(el, onTrigger){
+  var timer = null;
+  var startX = 0, startY = 0;
+  function clear(){ if (timer){ clearTimeout(timer); timer = null; } }
+  function alreadyEditing(){ return !!el.querySelector('.form-edit-input'); }
+  el.addEventListener('pointerdown', function(e){
+    if (e.button !== undefined && e.button !== 0) return;
+    startX = e.clientX; startY = e.clientY;
+    clear();
+    timer = setTimeout(function(){
+      timer = null;
+      if (alreadyEditing()) return;
+      suppressCardClick = true;
+      onTrigger();
+    }, 450);
+  });
+  el.addEventListener('pointermove', function(e){
+    if (timer && (Math.abs(e.clientX-startX)>10 || Math.abs(e.clientY-startY)>10)) clear();
+  });
+  el.addEventListener('pointerup', clear);
+  el.addEventListener('pointerleave', clear);
+  el.addEventListener('pointercancel', clear);
+  el.addEventListener('contextmenu', function(e){
+    /* right-click is the mouse equivalent of a long press; a real right-click
+       never fires a subsequent 'click' event, so this must NOT touch
+       suppressCardClick (nothing would ever reset it) */
+    e.preventDefault();
+    clear();
+    if (alreadyEditing()) return;
+    onTrigger();
+  });
+}
+
+function startEditForm(card){
+  var backForm = document.getElementById('backForm');
+  backForm.innerHTML = '';
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'form-edit-input';
+  input.autocomplete = 'off';
+  input.spellcheck = false;
+  input.value = card.form;
+  backForm.appendChild(input);
+  input.focus();
+  input.select();
+
+  var done = false;
+  function commit(){
+    if (done) return;
+    done = true;
+    var val = input.value.trim();
+    if (val && val !== card.form){
+      if (!card.verb.conj[card.tense]) card.verb.conj[card.tense] = {};
+      card.verb.conj[card.tense][currentPronoun] = val;
+      card.form = val;
+      saveVerbsLocalCache();
+      syncVerbToSheet(card.verb);
+    }
+    render();
+  }
+  function cancel(){
+    if (done) return;
+    done = true;
+    render();
+  }
+
+  input.addEventListener('click', function(e){ e.stopPropagation(); });
+  input.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+  input.addEventListener('keydown', function(e){
+    e.stopPropagation();
+    if (e.key==='Enter'){ e.preventDefault(); commit(); }
+    else if (e.key==='Escape'){ e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
+attachLongPress(document.getElementById('backForm'), function(){
+  startEditForm(deck[idx]);
 });
 
 /* ---------- add / manage verbs modal ---------- */
