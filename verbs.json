@@ -7,14 +7,18 @@
       "Preterite": {"yo": "hablé", "tu": "hablaste", "el": "habló", "nosotros": "hablamos", "vosotros": "hablasteis", "ellos": "hablaron"},
       "Imperfect": {"yo": "hablaba", "tu": "hablabas", "el": "hablaba", "nosotros": "hablábamos", "vosotros": "hablabais", "ellos": "hablaban"},
       "Future": {"yo": "hablaré", "tu": "hablarás", "el": "hablará", "nosotros": "hablaremos", "vosotros": "hablaréis", "ellos": "hablarán"},
-      "Conditional": {"yo": "hablaría", "tu": "hablarías", "el": "hablaría", "nosotros": "hablaríamos", "vosotros": "hablaríais", "ellos": "hablarían"}
+      "Conditional": {"yo": "hablaría", "tu": "hablarías", "el": "hablaría", "nosotros": "hablaríamos", "vosotros": "hablaríais", "ellos": "hablarían"},
+      "Present Perfect": {"yo": "he hablado", "tu": "has hablado", "el": "ha hablado", "nosotros": "hemos hablado", "vosotros": "habéis hablado", "ellos": "han hablado"},
+      "Present Subjunctive": {"yo": "hable", "tu": "hables", "el": "hable", "nosotros": "hablemos", "vosotros": "habléis", "ellos": "hablen"}
     },
     "examples": {
       "Present": {"es": "Yo hablo español.", "en": "I speak Spanish."},
       "Preterite": {"es": "Ayer hablé con mi amigo.", "en": "Yesterday I spoke with my friend."},
       "Imperfect": {"es": "Cuando era niño, hablaba mucho.", "en": "When I was a child, I used to talk a lot."},
       "Future": {"es": "Mañana hablaré contigo.", "en": "Tomorrow I will speak with you."},
-      "Conditional": {"es": "Hablaría más si tuviera tiempo.", "en": "I would speak more if I had time."}
+      "Conditional": {"es": "Hablaría más si tuviera tiempo.", "en": "I would speak more if I had time."},
+      "Present Perfect": {"es": "Hoy he hablado con mi jefe.", "en": "Today I have spoken with my boss."},
+      "Present Subjunctive": {"es": "Ella espera que yo hable más despacio.", "en": "She hopes that I speak more slowly."}
     }
   },
   {
@@ -25,7 +29,9 @@
       "Preterite": {"yo": "comí", "tu": "comiste", "el": "comió", "nosotros": "comimos", "vosotros": "comisteis", "ellos": "comieron"},
       "Imperfect": {"yo": "comía", "tu": "comías", "el": "comía", "nosotros": "comíamos", "vosotros": "comíais", "ellos": "comían"},
       "Future": {"yo": "comeré", "tu": "comerás", "el": "comerá", "nosotros": "comeremos", "vosotros": "comeréis", "ellos": "comerán"},
-      "Conditional": {"yo": "comería", "tu": "comerías", "el": "comería", "nosotros": "comeríamos", "vosotros": "comeríais", "ellos": "comerían"}
+      "Conditional": {"yo": "comería", "tu": "comerías", "el": "comería", "nosotros": "comeríamos", "vosotros": "comeríais", "ellos": "comerían"},
+      "Present Perfect": {"yo": "he comido", "tu": "has comido", "el": "ha comido", "nosotros": "hemos comido", "vosotros": "habéis comido", "ellos": "han comido"},
+      "Present Subjunctive": {"yo": "coma", "tu": "comas", "el": "coma", "nosotros": "comamos", "vosotros": "comáis", "ellos": "coman"}
     },
     "examples": {
       "Present": {"es": "Yo como frutas cada día.", "en": "I eat fruit every day."},
@@ -43,7 +49,9 @@
       "Preterite": {"yo": "viví", "tu": "viviste", "el": "vivió", "nosotros": "vivimos", "vosotros": "vivisteis", "ellos": "vivieron"},
       "Imperfect": {"yo": "vivía", "tu": "vivías", "el": "vivía", "nosotros": "vivíamos", "vosotros": "vivíais", "ellos": "vivían"},
       "Future": {"yo": "viviré", "tu": "vivirás", "el": "vivirá", "nosotros": "viviremos", "vosotros": "viviréis", "ellos": "vivirán"},
-      "Conditional": {"yo": "viviría", "tu": "vivirías", "el": "viviría", "nosotros": "viviríamos", "vosotros": "viviríais", "ellos": "vivirían"}
+      "Conditional": {"yo": "viviría", "tu": "vivirías", "el": "viviría", "nosotros": "viviríamos", "vosotros": "viviríais", "ellos": "vivirían"},
+      "Present Perfect": {"yo": "he vivido", "tu": "has vivido", "el": "ha vivido", "nosotros": "hemos vivido", "vosotros": "habéis vivido", "ellos": "han vivido"},
+      "Present Subjunctive": {"yo": "viva", "tu": "vivas", "el": "viva", "nosotros": "vivamos", "vosotros": "viváis", "ellos": "vivan"}
     },
     "examples": {
       "Present": {"es": "Yo vivo en una ciudad pequeña.", "en": "I live in a small city."},

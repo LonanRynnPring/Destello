@@ -151,11 +151,12 @@
   }
   .tlabels span{
     font-family:'JetBrains Mono', monospace;
-    font-size:10px;
-    letter-spacing:.03em;
+    font-size:9px;
+    letter-spacing:.02em;
     color:var(--ink-soft);
     text-align:center;
-    width:20%;
+    flex:1 1 0;
+    min-width:0;
   }
   .tlabels span.active{ color:var(--accent, var(--ink)); font-weight:700; }
 
@@ -279,6 +280,8 @@
     padding:2px 4px;
   }
   .back .form-edit-input:focus{ outline:none; }
+  .back .form-edit-input::placeholder{ color:var(--ink-soft); opacity:.5; font-style:italic; }
+  .back .placeholder-text{ color:var(--ink-soft); opacity:.55; font-style:italic; }
   .back .edit-hint{
     font-family:'JetBrains Mono', monospace;
     font-size:10px;
@@ -492,7 +495,7 @@
       <div class="face back">
         <div class="tag" id="backTag"></div>
         <div class="form" id="backForm"></div>
-        <div class="edit-hint">hold or right-click word to edit</div>
+        <div class="edit-hint" id="editHint"></div>
         <div class="gloss" id="backGloss"></div>
         <div class="example" id="backExample" style="display:none;">
           <div class="es" id="exEs"></div>
@@ -524,8 +527,13 @@ var PRONOUNS = [
   { key:'ellos',     label:'ellos',    color:'#00AAAA' },
 ];
 var PRONOUN_KEYS = PRONOUNS.map(function(p){ return p.key; });
-var TENSES = ['Present','Preterite','Imperfect','Future','Conditional'];
+var TENSES = ['Present','Preterite','Imperfect','Future','Conditional','Present Perfect','Present Subjunctive'];
+var TENSE_TRACK_LABELS = {
+  'Present Perfect': 'Pres. Perfect',
+  'Present Subjunctive': 'Pres. Subj.'
+};
 var STORAGE_KEY = 'destello-spanish-flashcards-v1';
+var PLACEHOLDER_FORM = '—';
 
 /* Paste your Google Apps Script web app URL here once deployed (see
    apps-script/Code.gs). Leave blank to keep using the local verbs.json
@@ -553,6 +561,17 @@ var ENDINGS = {
 /* future & conditional attach to the full infinitive, same for all three conjugations */
 var FUTURE_ENDINGS = ['é','ás','á','emos','éis','án'];
 var CONDITIONAL_ENDINGS = ['ía','ías','ía','íamos','íais','ían'];
+
+/* present perfect = haber (present tense, same for every verb) + past participle */
+var HABER_PRESENT = ['he','has','ha','hemos','habéis','han'];
+var PARTICIPLE_ENDING = { ar:'ado', er:'ido', ir:'ido' };
+
+/* present subjunctive endings swap to the "opposite" vowel family */
+var SUBJUNCTIVE_ENDINGS = {
+  ar: ['e','es','e','emos','éis','en'],
+  er: ['a','as','a','amos','áis','an'],
+  ir: ['a','as','a','amos','áis','an']
+};
 
 function detectType(infinitive){
   var end = infinitive.slice(-2).toLowerCase();
@@ -582,6 +601,15 @@ function generateConjugation(infinitive){
     conj.Future[p] = infinitive + FUTURE_ENDINGS[i];
     conj.Conditional[p] = infinitive + CONDITIONAL_ENDINGS[i];
   });
+
+  var participle = stem + PARTICIPLE_ENDING[type];
+  conj['Present Perfect'] = {};
+  PRONOUN_KEYS.forEach(function(p, i){ conj['Present Perfect'][p] = HABER_PRESENT[i] + ' ' + participle; });
+
+  var subjEndings = SUBJUNCTIVE_ENDINGS[type];
+  conj['Present Subjunctive'] = {};
+  PRONOUN_KEYS.forEach(function(p, i){ conj['Present Subjunctive'][p] = stem + subjEndings[i]; });
+
   return conj;
 }
 
@@ -594,14 +622,18 @@ function defaultVerbs(){
         Preterite:{yo:'hablé',tu:'hablaste',el:'habló',nosotros:'hablamos',vosotros:'hablasteis',ellos:'hablaron'},
         Imperfect:{yo:'hablaba',tu:'hablabas',el:'hablaba',nosotros:'hablábamos',vosotros:'hablabais',ellos:'hablaban'},
         Future:{yo:'hablaré',tu:'hablarás',el:'hablará',nosotros:'hablaremos',vosotros:'hablaréis',ellos:'hablarán'},
-        Conditional:{yo:'hablaría',tu:'hablarías',el:'hablaría',nosotros:'hablaríamos',vosotros:'hablaríais',ellos:'hablarían'}
+        Conditional:{yo:'hablaría',tu:'hablarías',el:'hablaría',nosotros:'hablaríamos',vosotros:'hablaríais',ellos:'hablarían'},
+        'Present Perfect':{yo:'he hablado',tu:'has hablado',el:'ha hablado',nosotros:'hemos hablado',vosotros:'habéis hablado',ellos:'han hablado'},
+        'Present Subjunctive':{yo:'hable',tu:'hables',el:'hable',nosotros:'hablemos',vosotros:'habléis',ellos:'hablen'}
       },
       examples:{
         Present:{es:'Yo hablo español.', en:'I speak Spanish.'},
         Preterite:{es:'Ayer hablé con mi amigo.', en:'Yesterday I spoke with my friend.'},
         Imperfect:{es:'Cuando era niño, hablaba mucho.', en:'When I was a child, I used to talk a lot.'},
         Future:{es:'Mañana hablaré contigo.', en:'Tomorrow I will speak with you.'},
-        Conditional:{es:'Hablaría más si tuviera tiempo.', en:'I would speak more if I had time.'}
+        Conditional:{es:'Hablaría más si tuviera tiempo.', en:'I would speak more if I had time.'},
+        'Present Perfect':{es:'Hoy he hablado con mi jefe.', en:'Today I have spoken with my boss.'},
+        'Present Subjunctive':{es:'Ella espera que yo hable más despacio.', en:'She hopes that I speak more slowly.'}
       }
     },
     {
@@ -611,7 +643,9 @@ function defaultVerbs(){
         Preterite:{yo:'comí',tu:'comiste',el:'comió',nosotros:'comimos',vosotros:'comisteis',ellos:'comieron'},
         Imperfect:{yo:'comía',tu:'comías',el:'comía',nosotros:'comíamos',vosotros:'comíais',ellos:'comían'},
         Future:{yo:'comeré',tu:'comerás',el:'comerá',nosotros:'comeremos',vosotros:'comeréis',ellos:'comerán'},
-        Conditional:{yo:'comería',tu:'comerías',el:'comería',nosotros:'comeríamos',vosotros:'comeríais',ellos:'comerían'}
+        Conditional:{yo:'comería',tu:'comerías',el:'comería',nosotros:'comeríamos',vosotros:'comeríais',ellos:'comerían'},
+        'Present Perfect':{yo:'he comido',tu:'has comido',el:'ha comido',nosotros:'hemos comido',vosotros:'habéis comido',ellos:'han comido'},
+        'Present Subjunctive':{yo:'coma',tu:'comas',el:'coma',nosotros:'comamos',vosotros:'comáis',ellos:'coman'}
       }
     },
     {
@@ -621,7 +655,9 @@ function defaultVerbs(){
         Preterite:{yo:'viví',tu:'viviste',el:'vivió',nosotros:'vivimos',vosotros:'vivisteis',ellos:'vivieron'},
         Imperfect:{yo:'vivía',tu:'vivías',el:'vivía',nosotros:'vivíamos',vosotros:'vivíais',ellos:'vivían'},
         Future:{yo:'viviré',tu:'vivirás',el:'vivirá',nosotros:'viviremos',vosotros:'viviréis',ellos:'vivirán'},
-        Conditional:{yo:'viviría',tu:'vivirías',el:'viviría',nosotros:'viviríamos',vosotros:'viviríais',ellos:'vivirían'}
+        Conditional:{yo:'viviría',tu:'vivirías',el:'viviría',nosotros:'viviríamos',vosotros:'viviríais',ellos:'vivirían'},
+        'Present Perfect':{yo:'he vivido',tu:'has vivido',el:'ha vivido',nosotros:'hemos vivido',vosotros:'habéis vivido',ellos:'han vivido'},
+        'Present Subjunctive':{yo:'viva',tu:'vivas',el:'viva',nosotros:'vivamos',vosotros:'viváis',ellos:'vivan'}
       }
     }
   ];
@@ -683,12 +719,15 @@ var idx = 0;
 var flipped = false;
 var modalView = null; /* null | 'list' | 'form' */
 var pendingConj = null;
+var pendingVerbName = '';
+var pendingVerbMeaning = '';
 
 function buildDeck(pronounKey){
   var d = [];
   VERBS_DATA.forEach(function(v){
     TENSES.forEach(function(tense){
-      d.push({ tense:tense, verb:v, form:(v.conj[tense] ? v.conj[tense][pronounKey] : '') || '' });
+      var stored = (v.conj[tense] ? v.conj[tense][pronounKey] : '') || '';
+      d.push({ tense:tense, verb:v, form: stored || PLACEHOLDER_FORM, placeholder: !stored });
     });
   });
   return d;
@@ -725,7 +764,7 @@ function renderTrack(){
     nodes.appendChild(n);
 
     var s = document.createElement('span');
-    s.textContent = t;
+    s.textContent = TENSE_TRACK_LABELS[t] || t;
     s.className = t===currentTense ? 'active':'';
     s.style.setProperty('--accent', accentColor());
     labels.appendChild(s);
@@ -766,6 +805,13 @@ function selectPronoun(key){
 
 function splitFormEls(card){
   var container = document.createDocumentFragment();
+  if (card.placeholder){
+    var placeholderSpan = document.createElement('span');
+    placeholderSpan.className = 'placeholder-text';
+    placeholderSpan.textContent = card.form;
+    container.appendChild(placeholderSpan);
+    return container;
+  }
   var type = detectType(card.verb.name);
   var stem = type ? card.verb.name.slice(0, -2) : null;
   var form = card.form;
@@ -819,6 +865,9 @@ function render(){
   backForm.innerHTML = '';
   backForm.appendChild(splitFormEls(card));
   backForm.style.setProperty('--accent', accent);
+  document.getElementById('editHint').textContent = card.placeholder
+    ? 'not added yet — hold or right-click to fill in'
+    : 'hold or right-click word to edit';
   document.getElementById('backGloss').textContent = card.verb.meaning || '';
 
   var exBlock = document.getElementById('backExample');
@@ -907,7 +956,8 @@ function startEditForm(card){
   input.className = 'form-edit-input';
   input.autocomplete = 'off';
   input.spellcheck = false;
-  input.value = card.form;
+  input.value = card.placeholder ? '' : card.form;
+  input.placeholder = card.placeholder ? 'type the correct form' : '';
   backForm.appendChild(input);
   input.focus();
   input.select();
@@ -917,10 +967,11 @@ function startEditForm(card){
     if (done) return;
     done = true;
     var val = input.value.trim();
-    if (val && val !== card.form){
+    if (val && (val !== card.form || card.placeholder)){
       if (!card.verb.conj[card.tense]) card.verb.conj[card.tense] = {};
       card.verb.conj[card.tense][currentPronoun] = val;
       card.form = val;
+      card.placeholder = false;
       saveVerbsLocalCache();
       syncVerbToSheet(card.verb);
     }
@@ -956,6 +1007,8 @@ function openModal(){
 function closeModal(){
   modalView = null;
   pendingConj = null;
+  pendingVerbName = '';
+  pendingVerbMeaning = '';
   document.getElementById('modalBackdrop').classList.add('hidden');
 }
 document.getElementById('openAdd').addEventListener('click', openModal);
@@ -1016,7 +1069,7 @@ function renderModal(){
     newBtn.className = 'modal-newbtn';
     newBtn.type = 'button';
     newBtn.textContent = '+ Add a new verb';
-    newBtn.onclick = function(){ modalView = 'form'; pendingConj = null; renderModal(); };
+    newBtn.onclick = function(){ modalView = 'form'; pendingConj = null; pendingVerbName = ''; pendingVerbMeaning = ''; renderModal(); };
     host.appendChild(newBtn);
   }
 
@@ -1039,6 +1092,8 @@ function renderModal(){
     nameInput.type = 'text';
     nameInput.id = 'newVerbName';
     nameInput.placeholder = 'e.g. estudiar';
+    nameInput.value = pendingVerbName;
+    nameInput.addEventListener('input', function(){ pendingVerbName = nameInput.value; });
     nameRow.appendChild(nameLabel);
     nameRow.appendChild(nameInput);
 
@@ -1050,6 +1105,8 @@ function renderModal(){
     meaningInput.type = 'text';
     meaningInput.id = 'newVerbMeaning';
     meaningInput.placeholder = 'e.g. to study';
+    meaningInput.value = pendingVerbMeaning;
+    meaningInput.addEventListener('input', function(){ pendingVerbMeaning = meaningInput.value; });
     meaningRow.appendChild(meaningLabel);
     meaningRow.appendChild(meaningInput);
 
