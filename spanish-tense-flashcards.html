@@ -669,15 +669,20 @@ function detectType(infinitive){
   return null;
 }
 
+function blankConjugation(){
+  var conj = {};
+  TENSES.forEach(function(t){
+    conj[t] = {};
+    PRONOUN_KEYS.forEach(function(p){ conj[t][p] = ''; });
+  });
+  return conj;
+}
+
 function generateConjugation(infinitive){
   var type = detectType(infinitive);
   var conj = {};
   if (!type){
-    TENSES.forEach(function(t){
-      conj[t] = {};
-      PRONOUN_KEYS.forEach(function(p){ conj[t][p] = ''; });
-    });
-    return conj;
+    return blankConjugation();
   }
   var stem = infinitive.slice(0, -2);
   ['Present','Preterite','Imperfect'].forEach(function(tense){
@@ -876,6 +881,7 @@ var modalView = null; /* null | 'list' | 'form' */
 var pendingConj = null;
 var pendingVerbName = '';
 var pendingVerbMeaning = '';
+var pendingVerbIsRegular = true;
 
 function buildDeck(pronounKey){
   var d = [];
@@ -1291,6 +1297,7 @@ function closeModal(){
   pendingConj = null;
   pendingVerbName = '';
   pendingVerbMeaning = '';
+  pendingVerbIsRegular = true;
   document.getElementById('modalBackdrop').classList.add('hidden');
 }
 document.getElementById('openAdd').addEventListener('click', openModal);
@@ -1352,7 +1359,7 @@ function renderModal(){
     newBtn.className = 'modal-newbtn';
     newBtn.type = 'button';
     newBtn.textContent = '+ Add a new verb';
-    newBtn.onclick = function(){ modalView = 'form'; pendingConj = null; pendingVerbName = ''; pendingVerbMeaning = ''; renderModal(); };
+    newBtn.onclick = function(){ modalView = 'form'; pendingConj = null; pendingVerbName = ''; pendingVerbMeaning = ''; pendingVerbIsRegular = true; renderModal(); };
     host.appendChild(newBtn);
   }
 
@@ -1397,6 +1404,31 @@ function renderModal(){
     host.appendChild(meaningRow);
 
     if (!pendingConj){
+      var typeRow = document.createElement('div');
+      typeRow.className = 'form-row';
+      var typeLabel = document.createElement('label');
+      typeLabel.textContent = 'Verb type';
+      var typeActions = document.createElement('div');
+      typeActions.className = 'form-actions';
+
+      var regBtn = document.createElement('button');
+      regBtn.type = 'button';
+      regBtn.textContent = 'Regular';
+      regBtn.className = pendingVerbIsRegular ? 'navbtn' : 'ghostbtn';
+      regBtn.onclick = function(){ pendingVerbIsRegular = true; renderModal(); };
+
+      var irregBtn = document.createElement('button');
+      irregBtn.type = 'button';
+      irregBtn.textContent = 'Irregular';
+      irregBtn.className = pendingVerbIsRegular ? 'ghostbtn' : 'navbtn';
+      irregBtn.onclick = function(){ pendingVerbIsRegular = false; renderModal(); };
+
+      typeActions.appendChild(regBtn);
+      typeActions.appendChild(irregBtn);
+      typeRow.appendChild(typeLabel);
+      typeRow.appendChild(typeActions);
+      host.appendChild(typeRow);
+
       var genBtn = document.createElement('button');
       genBtn.className = 'navbtn';
       genBtn.type = 'button';
@@ -1405,13 +1437,18 @@ function renderModal(){
       genBtn.onclick = function(){
         var name = nameInput.value.trim().toLowerCase();
         if (!name){ nameInput.focus(); return; }
-        pendingConj = generateConjugation(name);
+        pendingConj = pendingVerbIsRegular ? generateConjugation(name) : blankConjugation();
         renderModal();
       };
       host.appendChild(genBtn);
     } else {
       var name = nameInput.value.trim().toLowerCase();
-      if (!detectType(name)){
+      if (!pendingVerbIsRegular){
+        var noteIrreg = document.createElement('div');
+        noteIrreg.className = 'form-note';
+        noteIrreg.textContent = 'Irregular verb — fill in every form by hand below.';
+        host.appendChild(noteIrreg);
+      } else if (!detectType(name)){
         var note = document.createElement('div');
         note.className = 'form-note';
         note.textContent = 'Doesn’t end in -ar/-er/-ir — fill in every form by hand below.';
