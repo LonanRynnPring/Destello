@@ -112,6 +112,77 @@
   }
   .pchip:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
 
+  /* random-card controls */
+  .random-row{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:2px 0 0;
+  }
+  .random-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .random-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    flex:1 1 auto;
+  }
+  .allbtn{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1.5px solid var(--ring);
+    border-radius:999px;
+    padding:3px 9px;
+    cursor:pointer;
+    flex:none;
+    transition:all .12s ease;
+  }
+  .allbtn:hover{ color:var(--ink); border-color:var(--ink); }
+  .allbtn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .rchip{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:11.5px;
+    padding:4px 9px;
+    border-radius:999px;
+    border:1.5px solid var(--ring);
+    background:transparent;
+    color:var(--ink-soft);
+    opacity:.5;
+    cursor:pointer;
+    transition:opacity .12s ease, background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .rchip.active{
+    opacity:1;
+    border-color:var(--chip-color, var(--ink));
+    color:var(--chip-color, var(--ink));
+    background:color-mix(in srgb, var(--chip-color, var(--ink)) 12%, transparent);
+  }
+  .rchip:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .dicebtn{
+    font-size:16px;
+    line-height:1;
+    padding:6px 10px;
+    border-radius:10px;
+    border:1.5px solid var(--ink);
+    background:var(--ink);
+    color:#fff;
+    cursor:pointer;
+    flex:none;
+  }
+  .dicebtn:hover{ transform:translateY(-1px); }
+  .dicebtn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+
   /* time track */
   .track{
     margin:26px 0 8px;
@@ -473,6 +544,23 @@
 
   <div class="pronouns" id="pronouns"></div>
 
+  <div class="random-row">
+    <div class="random-label">pronouns</div>
+    <button class="allbtn" id="pronounAllBtn" type="button"></button>
+    <div class="random-chips" id="randomChips"></div>
+  </div>
+  <div class="random-row">
+    <div class="random-label">tenses</div>
+    <button class="allbtn" id="tenseAllBtn" type="button"></button>
+    <div class="random-chips" id="randomTenseChips"></div>
+  </div>
+  <div class="random-row">
+    <div class="random-label">verbs</div>
+    <button class="allbtn" id="verbAllBtn" type="button"></button>
+    <div class="random-chips" id="randomVerbChips"></div>
+    <button class="dicebtn" id="randomBtn" type="button" title="Show a random card">🎲</button>
+  </div>
+
   <div class="track">
     <div class="track-line"></div>
     <div class="track-nodes" id="trackNodes"></div>
@@ -712,8 +800,73 @@ function syncDeleteToSheet(name){
   return postToSheet({ action:'delete', name: name });
 }
 
+var RANDOM_PRONOUNS_KEY = 'destello-random-pronouns-v1';
+
+function loadRandomPronouns(){
+  try {
+    var raw = localStorage.getItem(RANDOM_PRONOUNS_KEY);
+    if (raw){
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length){
+        return parsed.filter(function(k){ return PRONOUN_KEYS.indexOf(k)>=0; });
+      }
+    }
+  } catch(e){ /* ignore corrupt storage */ }
+  return PRONOUN_KEYS.slice();
+}
+
+function saveRandomPronouns(){
+  try { localStorage.setItem(RANDOM_PRONOUNS_KEY, JSON.stringify(PRONOUN_KEYS.filter(function(k){ return randomPronouns.has(k); }))); }
+  catch(e){ /* ignore */ }
+}
+
+var RANDOM_TENSES_KEY = 'destello-random-tenses-v1';
+
+function loadRandomTenses(){
+  try {
+    var raw = localStorage.getItem(RANDOM_TENSES_KEY);
+    if (raw){
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length){
+        return parsed.filter(function(t){ return TENSES.indexOf(t)>=0; });
+      }
+    }
+  } catch(e){ /* ignore corrupt storage */ }
+  return TENSES.slice();
+}
+
+function saveRandomTenses(){
+  try { localStorage.setItem(RANDOM_TENSES_KEY, JSON.stringify(TENSES.filter(function(t){ return randomTenses.has(t); }))); }
+  catch(e){ /* ignore */ }
+}
+
+/* Verbs are stored as an EXCLUDE list (rather than an include list like
+   pronouns/tenses) so any verb added later - by this browser or synced in
+   from the shared sheet - defaults to included in the random draw without
+   needing to reconcile against a fixed list of known names. */
+var RANDOM_EXCLUDED_VERBS_KEY = 'destello-random-excluded-verbs-v1';
+
+function loadExcludedVerbs(){
+  try {
+    var raw = localStorage.getItem(RANDOM_EXCLUDED_VERBS_KEY);
+    if (raw){
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch(e){ /* ignore corrupt storage */ }
+  return [];
+}
+
+function saveExcludedVerbs(){
+  try { localStorage.setItem(RANDOM_EXCLUDED_VERBS_KEY, JSON.stringify(Array.from(excludedVerbs))); }
+  catch(e){ /* ignore */ }
+}
+
 var VERBS_DATA = loadVerbsLocalCache();
 var currentPronoun = 'yo';
+var randomPronouns = new Set(loadRandomPronouns());
+var randomTenses = new Set(loadRandomTenses());
+var excludedVerbs = new Set(loadExcludedVerbs());
 var deck = [];
 var idx = 0;
 var flipped = false;
@@ -749,6 +902,119 @@ function renderPronounChips(){
     b.onclick = function(){ selectPronoun(p.key); };
     el.appendChild(b);
   });
+}
+
+/* An empty pool just falls back to "everyone" in showRandomCard, so these
+   toggles are free to reach zero - no need to protect the last item. */
+function renderAllBtn(btnId, allSelected, onToggle){
+  var b = document.getElementById(btnId);
+  b.textContent = allSelected ? 'none' : 'all';
+  b.onclick = onToggle;
+}
+
+function toggleRandomPronoun(key){
+  if (randomPronouns.has(key)) randomPronouns.delete(key);
+  else randomPronouns.add(key);
+  saveRandomPronouns();
+  renderRandomChips();
+}
+
+function toggleAllRandomPronouns(){
+  if (randomPronouns.size===PRONOUN_KEYS.length) randomPronouns.clear();
+  else PRONOUN_KEYS.forEach(function(k){ randomPronouns.add(k); });
+  saveRandomPronouns();
+  renderRandomChips();
+}
+
+function renderRandomChips(){
+  var el = document.getElementById('randomChips');
+  el.innerHTML = '';
+  PRONOUNS.forEach(function(p){
+    var b = document.createElement('button');
+    b.className = 'rchip' + (randomPronouns.has(p.key) ? ' active':'');
+    b.style.setProperty('--chip-color', p.color);
+    b.textContent = p.label;
+    b.setAttribute('aria-pressed', randomPronouns.has(p.key));
+    b.onclick = function(){ toggleRandomPronoun(p.key); };
+    el.appendChild(b);
+  });
+  renderAllBtn('pronounAllBtn', randomPronouns.size===PRONOUN_KEYS.length, toggleAllRandomPronouns);
+}
+
+function toggleRandomTense(tense){
+  if (randomTenses.has(tense)) randomTenses.delete(tense);
+  else randomTenses.add(tense);
+  saveRandomTenses();
+  renderRandomTenseChips();
+}
+
+function toggleAllRandomTenses(){
+  if (randomTenses.size===TENSES.length) randomTenses.clear();
+  else TENSES.forEach(function(t){ randomTenses.add(t); });
+  saveRandomTenses();
+  renderRandomTenseChips();
+}
+
+function renderRandomTenseChips(){
+  var el = document.getElementById('randomTenseChips');
+  el.innerHTML = '';
+  TENSES.forEach(function(t){
+    var b = document.createElement('button');
+    b.className = 'rchip' + (randomTenses.has(t) ? ' active':'');
+    b.textContent = TENSE_TRACK_LABELS[t] || t;
+    b.setAttribute('aria-pressed', randomTenses.has(t));
+    b.onclick = function(){ toggleRandomTense(t); };
+    el.appendChild(b);
+  });
+  renderAllBtn('tenseAllBtn', randomTenses.size===TENSES.length, toggleAllRandomTenses);
+}
+
+function toggleRandomVerb(name){
+  if (excludedVerbs.has(name)) excludedVerbs.delete(name);
+  else excludedVerbs.add(name);
+  saveExcludedVerbs();
+  renderRandomVerbChips();
+}
+
+function toggleAllRandomVerbs(){
+  if (excludedVerbs.size===0) VERBS_DATA.forEach(function(v){ excludedVerbs.add(v.name); });
+  else excludedVerbs.clear();
+  saveExcludedVerbs();
+  renderRandomVerbChips();
+}
+
+function renderRandomVerbChips(){
+  var el = document.getElementById('randomVerbChips');
+  el.innerHTML = '';
+  VERBS_DATA.forEach(function(v){
+    var b = document.createElement('button');
+    b.className = 'rchip' + (excludedVerbs.has(v.name) ? '' : ' active');
+    b.textContent = v.name.toLowerCase();
+    b.setAttribute('aria-pressed', !excludedVerbs.has(v.name));
+    b.onclick = function(){ toggleRandomVerb(v.name); };
+    el.appendChild(b);
+  });
+  renderAllBtn('verbAllBtn', excludedVerbs.size===0, toggleAllRandomVerbs);
+}
+
+function showRandomCard(){
+  var pronounPool = PRONOUN_KEYS.filter(function(k){ return randomPronouns.has(k); });
+  if (!pronounPool.length) pronounPool = PRONOUN_KEYS.slice();
+  var tensePool = TENSES.filter(function(t){ return randomTenses.has(t); });
+  if (!tensePool.length) tensePool = TENSES.slice();
+  var verbPool = VERBS_DATA.filter(function(v){ return !excludedVerbs.has(v.name); });
+  if (!verbPool.length) verbPool = VERBS_DATA.slice();
+
+  var pronoun = pronounPool[Math.floor(Math.random()*pronounPool.length)];
+  var verb = verbPool[Math.floor(Math.random()*verbPool.length)];
+  var tense = tensePool[Math.floor(Math.random()*tensePool.length)];
+
+  currentPronoun = pronoun;
+  deck = buildDeck(pronoun);
+  var i = deck.findIndex(function(c){ return c.tense===tense && c.verb.name===verb.name; });
+  idx = i>=0 ? i : 0;
+  flipped = false;
+  render();
 }
 
 function renderTrack(){
@@ -839,6 +1105,9 @@ function render(){
   document.documentElement.style.setProperty('--accent', accent);
 
   renderPronounChips();
+  renderRandomChips();
+  renderRandomTenseChips();
+  renderRandomVerbChips();
   renderTrack();
   renderVerbChips();
 
@@ -900,6 +1169,10 @@ document.getElementById('prevBtn').addEventListener('click', function(e){
 document.getElementById('nextBtn').addEventListener('click', function(e){
   e.stopPropagation();
   if (idx<deck.length-1){ idx++; flipped=false; render(); }
+});
+document.getElementById('randomBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  showRandomCard();
 });
 document.addEventListener('keydown', function(e){
   if (modalView) {
@@ -1225,6 +1498,7 @@ function deleteVerb(name){
   if (!window.confirm('Remove ' + name + ' from your deck?')) return;
   VERBS_DATA = VERBS_DATA.filter(function(v){ return v.name!==name; });
   saveVerbsLocalCache();
+  if (excludedVerbs.delete(name)) saveExcludedVerbs();
   deck = buildDeck(currentPronoun);
   idx = 0; flipped = false;
   render();
