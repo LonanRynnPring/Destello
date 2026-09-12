@@ -113,6 +113,12 @@
   .pchip:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
 
   /* random-card controls */
+  .random-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:20px 0 6px;
+  }
   .random-row{
     display:flex;
     align-items:center;
@@ -120,6 +126,8 @@
     gap:8px;
     margin:2px 0 0;
   }
+  .modal-card .random-row{ margin:0 0 16px; }
+  .modal-card .random-row:last-child{ margin-bottom:0; }
   .random-label{
     font-family:'JetBrains Mono', monospace;
     font-size:10.5px;
@@ -182,6 +190,12 @@
   }
   .dicebtn:hover{ transform:translateY(-1px); }
   .dicebtn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .dicebtn.ghost{
+    background:transparent;
+    color:var(--ink);
+    border-color:var(--ring);
+  }
+  .dicebtn.ghost:hover{ border-color:var(--ink); }
 
   /* time track */
   .track{
@@ -544,20 +558,8 @@
 
   <div class="pronouns" id="pronouns"></div>
 
-  <div class="random-row">
-    <div class="random-label">pronouns</div>
-    <button class="allbtn" id="pronounAllBtn" type="button"></button>
-    <div class="random-chips" id="randomChips"></div>
-  </div>
-  <div class="random-row">
-    <div class="random-label">tenses</div>
-    <button class="allbtn" id="tenseAllBtn" type="button"></button>
-    <div class="random-chips" id="randomTenseChips"></div>
-  </div>
-  <div class="random-row">
-    <div class="random-label">verbs</div>
-    <button class="allbtn" id="verbAllBtn" type="button"></button>
-    <div class="random-chips" id="randomVerbChips"></div>
+  <div class="random-bar">
+    <button class="dicebtn ghost" id="openRandomFilters" type="button" title="Choose which pronouns, tenses &amp; verbs to randomize from">⚙️</button>
     <button class="dicebtn" id="randomBtn" type="button" title="Show a random card">🎲</button>
   </div>
 
@@ -1105,9 +1107,11 @@ function render(){
   document.documentElement.style.setProperty('--accent', accent);
 
   renderPronounChips();
-  renderRandomChips();
-  renderRandomTenseChips();
-  renderRandomVerbChips();
+  if (modalView==='random'){
+    renderRandomChips();
+    renderRandomTenseChips();
+    renderRandomVerbChips();
+  }
   renderTrack();
   renderVerbChips();
 
@@ -1277,6 +1281,11 @@ function openModal(){
   document.getElementById('modalBackdrop').classList.remove('hidden');
   renderModal();
 }
+function openRandomFiltersModal(){
+  modalView = 'random';
+  document.getElementById('modalBackdrop').classList.remove('hidden');
+  renderModal();
+}
 function closeModal(){
   modalView = null;
   pendingConj = null;
@@ -1285,6 +1294,7 @@ function closeModal(){
   document.getElementById('modalBackdrop').classList.add('hidden');
 }
 document.getElementById('openAdd').addEventListener('click', openModal);
+document.getElementById('openRandomFilters').addEventListener('click', openRandomFiltersModal);
 document.getElementById('modalBackdrop').addEventListener('click', function(e){
   if (e.target.id==='modalBackdrop') closeModal();
 });
@@ -1489,6 +1499,45 @@ function renderModal(){
       actions.appendChild(save);
       host.appendChild(actions);
     }
+  }
+
+  if (modalView==='random'){
+    var eyebrow3 = document.createElement('div');
+    eyebrow3.className = 'modal-eyebrow';
+    eyebrow3.textContent = 'random card';
+    host.appendChild(eyebrow3);
+
+    var title3 = document.createElement('div');
+    title3.className = 'modal-title';
+    title3.textContent = 'Randomize from';
+    host.appendChild(title3);
+
+    function filterRow(label, chipsId, allBtnId){
+      var row = document.createElement('div');
+      row.className = 'random-row';
+      var lbl = document.createElement('div');
+      lbl.className = 'random-label';
+      lbl.textContent = label;
+      var allBtn = document.createElement('button');
+      allBtn.className = 'allbtn';
+      allBtn.type = 'button';
+      allBtn.id = allBtnId;
+      var chips = document.createElement('div');
+      chips.className = 'random-chips';
+      chips.id = chipsId;
+      row.appendChild(lbl);
+      row.appendChild(allBtn);
+      row.appendChild(chips);
+      host.appendChild(row);
+    }
+
+    filterRow('pronouns', 'randomChips', 'pronounAllBtn');
+    filterRow('tenses', 'randomTenseChips', 'tenseAllBtn');
+    filterRow('verbs', 'randomVerbChips', 'verbAllBtn');
+
+    renderRandomChips();
+    renderRandomTenseChips();
+    renderRandomVerbChips();
   }
 
 }
